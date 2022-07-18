@@ -3,12 +3,26 @@ import { useState, useEffect } from "react";
 import ReactLoading from "react-loading";
 import axios from "axios";
 import Modal from "react-modal";
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
 
 function PokeDex() {
   const [pokemons, setPokemons] = useState([]);
   const [pokemonDetail, setPokemonDetail] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [id, setId] = useState(null)
 
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true)
+      const res = await axios.get('https://pokeapi.co/api/v2/pokemon');
+      setPokemons(res.data.results)
+      setIsLoading(false);
+      console.log('res', res);
+    }
+    fetchData();
+  }, [])
+  console.log(pokemons);
   const customStyles = {
     content: {
       top: "50%",
@@ -22,7 +36,13 @@ function PokeDex() {
     },
     overlay: { backgroundColor: "grey" },
   };
-
+  const onModel = (each) => {
+    console.log('onModel');
+    setPokemonDetail(each)
+    const id = pokemons.indexOf(each);
+    setId(id + 1)
+  }
+  console.log("pokemonDetail", pokemonDetail);
   if (!isLoading && pokemons.length === 0) {
     return (
       <div>
@@ -56,14 +76,22 @@ function PokeDex() {
           <>
             <div className="App">
               <header className="App-header">
-                <b>Implement loader here</b>
+                <b>Loading....</b>
               </header>
             </div>
           </>
         ) : (
           <>
             <h1>Welcome to pokedex !</h1>
-            <b>Implement Pokedex list here</b>
+
+            {
+              pokemons.map((each, index) => {
+                return (
+                  <b key={index} className="list_item" onClick={() => onModel(each)}>{each.name}</b>
+                )
+              })
+            }
+
           </>
         )}
       </header>
@@ -79,13 +107,29 @@ function PokeDex() {
           <div>
             Requirement:
             <ul>
-              <li>show the sprites front_default as the pokemon image</li>
-              <li>
-                Show the stats details - only stat.name and base_stat is
-                required in tabular format
-              </li>
-              <li>Create a bar chart based on the stats above</li>
-              <li>Create a  buttton to download the information generated in this modal as pdf. (images and chart must be included)</li>
+              <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`} alt="image" />
+              <table style={{ border: '1px solid white' }}>
+                <thead>
+                  <th >Name</th>
+                  <th>Url</th>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{pokemonDetail.name}</td>
+                    <td>{pokemonDetail.url}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <BarChart width={500} height={200} data={pokemons}>
+                <XAxis dataKey="name" stroke="#8884d8" />
+                <YAxis />
+                <Tooltip />
+                <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                <Bar dataKey="uv" fill="#8884d8" barSize={30} />
+              </BarChart>
+
+              <a href='#' download='pokemon-info'>download</a>
             </ul>
           </div>
         </Modal>
